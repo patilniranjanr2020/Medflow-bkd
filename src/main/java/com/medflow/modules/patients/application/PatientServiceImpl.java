@@ -20,6 +20,7 @@ import com.medflow.modules.patients.domain.repository.PatientMedicalHistoryRepos
 import com.medflow.modules.patients.domain.repository.PatientReportRepository;
 import com.medflow.modules.patients.domain.repository.PatientRepository;
 import com.medflow.modules.patients.domain.repository.UserPatientMappingRepository;
+import com.medflow.modules.patients.domain.service.PatientRegistrationProfileValidator;
 import com.medflow.modules.users.api.UserAccountService;
 import com.medflow.modules.users.api.UserSummary;
 import com.medflow.shared.api.PageResponse;
@@ -44,21 +45,24 @@ class PatientServiceImpl implements PatientService {
   private final PatientReportRepository reportRepository;
   private final UserPatientMappingRepository mappingRepository;
   private final UserAccountService userAccountService;
+  private final PatientRegistrationProfileValidator profileValidator;
 
   PatientServiceImpl(PatientRepository repository,
       PatientMedicalHistoryRepository historyRepository,
       PatientReportRepository reportRepository, UserPatientMappingRepository mappingRepository,
-      UserAccountService userAccountService) {
+      UserAccountService userAccountService, PatientRegistrationProfileValidator profileValidator) {
     this.repository = repository;
     this.historyRepository = historyRepository;
     this.reportRepository = reportRepository;
     this.mappingRepository = mappingRepository;
     this.userAccountService = userAccountService;
+    this.profileValidator = profileValidator;
   }
 
   @Override
   @Transactional
   public PatientResponse create(Long hospitalId, CreatePatientRequest request) {
+    profileValidator.validateCreate(hospitalId, request);
     if (request.email() != null
         && repository.existsByHospitalIdAndEmailIgnoreCase(hospitalId, request.email())) {
       throw new DuplicateResourceException("A patient with this email already exists");
@@ -66,7 +70,12 @@ class PatientServiceImpl implements PatientService {
     var patient = repository.save(new Patient(hospitalId, nextPatientCode(hospitalId),
         request.firstName(), request.lastName(), request.gender(), request.dateOfBirth(),
         request.bloodGroup(), request.phone(), request.email(), request.address(),
-        request.emergencyContactName(), request.emergencyContactPhone()));
+        request.emergencyContactName(), request.emergencyContactPhone(), request.city(), request.state(),
+        request.postalCode(), request.preferredLanguage(), request.emergencyContactRelationship(),
+        request.insuranceProvider(), request.memberId(), request.governmentIdType(),
+        request.governmentIdNumber(), request.allergies(), request.consentStatus(),
+        request.referringPhysician(), request.guardianName(), request.guardianRelationship(),
+        request.guardianMobile()));
     return toResponse(patient);
   }
 
@@ -79,6 +88,7 @@ class PatientServiceImpl implements PatientService {
   @Override
   @Transactional
   public PatientResponse update(Long hospitalId, Long patientId, UpdatePatientRequest request) {
+    profileValidator.validateUpdate(hospitalId, request);
     if (request.email() != null && repository.existsByHospitalIdAndEmailIgnoreCaseAndIdNot(
         hospitalId, request.email(), patientId)) {
       throw new DuplicateResourceException("A patient with this email already exists");
@@ -208,7 +218,12 @@ class PatientServiceImpl implements PatientService {
         patient.getPatientCode(), patient.getFirstName(), patient.getLastName(),
         patient.getFullName(), patient.getGender(), patient.getDateOfBirth(), patient.getAge(),
         patient.getBloodGroup(), patient.getPhone(), patient.getEmail(), patient.getAddress(),
-        patient.getEmergencyContactName(), patient.getEmergencyContactPhone(), patient.getStatus(),
+        patient.getEmergencyContactName(), patient.getEmergencyContactPhone(), patient.getCity(),
+        patient.getState(), patient.getPostalCode(), patient.getPreferredLanguage(),
+        patient.getEmergencyContactRelationship(), patient.getInsuranceProvider(), patient.getMemberId(),
+        patient.getGovernmentIdType(), patient.getGovernmentIdNumber(), patient.getAllergies(),
+        patient.getConsentStatus(), patient.getReferringPhysician(), patient.getGuardianName(),
+        patient.getGuardianRelationship(), patient.getGuardianMobile(), patient.getStatus(),
         patient.getCreatedAt(), patient.getUpdatedAt());
   }
 

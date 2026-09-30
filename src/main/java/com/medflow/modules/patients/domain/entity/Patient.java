@@ -61,6 +61,22 @@ public class Patient {
   @Column(name = "emergency_contact_phone", length = 20)
   private String emergencyContactPhone;
 
+  @Column(length = 100) private String city;
+  @Column(length = 100) private String state;
+  @Column(name = "postal_code", length = 6) private String postalCode;
+  @Column(name = "preferred_language", length = 50) private String preferredLanguage;
+  @Column(name = "emergency_contact_relationship", length = 50) private String emergencyContactRelationship;
+  @Column(name = "insurance_provider", length = 150) private String insuranceProvider;
+  @Column(name = "member_id", length = 100) private String memberId;
+  @Column(name = "government_id_type", length = 50) private String governmentIdType;
+  @Column(name = "government_id_number", length = 100) private String governmentIdNumber;
+  @Column(length = 2000) private String allergies;
+  @Column(name = "consent_status", length = 50) private String consentStatus;
+  @Column(name = "referring_physician", length = 150) private String referringPhysician;
+  @Column(name = "guardian_name", length = 100) private String guardianName;
+  @Column(name = "guardian_relationship", length = 50) private String guardianRelationship;
+  @Column(name = "guardian_mobile", length = 20) private String guardianMobile;
+
   @Column(nullable = false, length = 30)
   private AccountStatus status;
 
@@ -78,7 +94,12 @@ public class Patient {
 
   public Patient(Long hospitalId, String patientCode, String firstName, String lastName,
       Gender gender, LocalDate dateOfBirth, String bloodGroup, String phone, String email,
-      String address, String emergencyContactName, String emergencyContactPhone) {
+      String address, String emergencyContactName, String emergencyContactPhone,
+      String city, String state, String postalCode, String preferredLanguage,
+      String emergencyContactRelationship, String insuranceProvider, String memberId,
+      String governmentIdType, String governmentIdNumber, String allergies, String consentStatus,
+      String referringPhysician, String guardianName, String guardianRelationship,
+      String guardianMobile) {
     this.hospitalId = hospitalId;
     this.patientCode = patientCode;
     this.firstName = firstName;
@@ -91,6 +112,21 @@ public class Patient {
     this.address = address;
     this.emergencyContactName = emergencyContactName;
     this.emergencyContactPhone = emergencyContactPhone;
+    this.city = city;
+    this.state = state;
+    this.postalCode = postalCode;
+    this.preferredLanguage = preferredLanguage;
+    this.emergencyContactRelationship = emergencyContactRelationship;
+    this.insuranceProvider = insuranceProvider;
+    this.memberId = memberId;
+    this.governmentIdType = governmentIdType;
+    this.governmentIdNumber = governmentIdNumber;
+    this.allergies = allergies;
+    this.consentStatus = consentStatus;
+    this.referringPhysician = referringPhysician;
+    this.guardianName = guardianName;
+    this.guardianRelationship = guardianRelationship;
+    this.guardianMobile = guardianMobile;
     this.status = AccountStatus.ACTIVE;
     this.createdAt = Instant.now();
     this.updatedAt = this.createdAt;
@@ -108,6 +144,21 @@ public class Patient {
     this.address = request.address();
     this.emergencyContactName = request.emergencyContactName();
     this.emergencyContactPhone = request.emergencyContactPhone();
+    this.city = request.city();
+    this.state = request.state();
+    this.postalCode = request.postalCode();
+    this.preferredLanguage = request.preferredLanguage();
+    this.emergencyContactRelationship = request.emergencyContactRelationship();
+    this.insuranceProvider = request.insuranceProvider();
+    this.memberId = request.memberId();
+    this.governmentIdType = request.governmentIdType();
+    this.governmentIdNumber = request.governmentIdNumber();
+    this.allergies = request.allergies();
+    this.consentStatus = request.consentStatus();
+    this.referringPhysician = request.referringPhysician();
+    this.guardianName = request.guardianName();
+    this.guardianRelationship = request.guardianRelationship();
+    this.guardianMobile = request.guardianMobile();
     this.status = request.status();
     this.updatedAt = Instant.now();
   }
@@ -139,6 +190,21 @@ public class Patient {
   public String getAddress() { return address; }
   public String getEmergencyContactName() { return emergencyContactName; }
   public String getEmergencyContactPhone() { return emergencyContactPhone; }
+  public String getCity() { return city; }
+  public String getState() { return state; }
+  public String getPostalCode() { return postalCode; }
+  public String getPreferredLanguage() { return preferredLanguage; }
+  public String getEmergencyContactRelationship() { return emergencyContactRelationship; }
+  public String getInsuranceProvider() { return insuranceProvider; }
+  public String getMemberId() { return memberId; }
+  public String getGovernmentIdType() { return governmentIdType; }
+  public String getGovernmentIdNumber() { return governmentIdNumber; }
+  public String getAllergies() { return allergies; }
+  public String getConsentStatus() { return consentStatus; }
+  public String getReferringPhysician() { return referringPhysician; }
+  public String getGuardianName() { return guardianName; }
+  public String getGuardianRelationship() { return guardianRelationship; }
+  public String getGuardianMobile() { return guardianMobile; }
   public AccountStatus getStatus() { return status; }
   public Instant getCreatedAt() { return createdAt; }
   public Instant getUpdatedAt() { return updatedAt; }

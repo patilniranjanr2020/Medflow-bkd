@@ -25,6 +25,9 @@ spring:
     #   FLYWAY_LOCATIONS=classpath:db/migration
     locations: ${FLYWAY_LOCATIONS:classpath:db/migration,classpath:db/demo}
     baseline-on-migrate: true
+    # Older local databases may contain the retired V101/V102 profile migrations.
+    # Their schema is upgraded by V103 below, so missing script validation is safe here.
+    ignore-migration-patterns: ${FLYWAY_IGNORE_MIGRATION_PATTERNS:*:missing}
     # Seed data contains BCrypt hashes and JSON; never treat ${...} as a placeholder.
     placeholder-replacement: false
   data:
@@ -45,7 +48,7 @@ medflow:
       issuer: medflow-ai
       access-token-ttl: ${JWT_TTL:PT8H}
     cors:
-      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:4173,http://localhost:3000}
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://localhost:3000}
   cache:
     # "simple" keeps local development dependency-free (in-memory caches).
     # Set to "redis" when a Redis instance is available.

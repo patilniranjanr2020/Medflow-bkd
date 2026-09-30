@@ -137,7 +137,8 @@ workspace and every endpoint behave identically — the data just disappears on 
 mvn spring-boot:test-run "-Dspring-boot.run.arguments=--spring.datasource.url=jdbc:h2:mem:medflow;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE --spring.datasource.username=sa --spring.datasource.password= --spring.datasource.driver-class-name=org.h2.Driver"
 ```
 
-(`test-run` is used because the H2 driver is a test-scope dependency.)
+H2 is included at runtime specifically for this local profile; the normal application
+configuration still defaults to PostgreSQL.
 
 Package and run a jar instead:
 
@@ -243,7 +244,7 @@ for 30 seconds, so give it a moment (or refresh twice) before the new counts app
 ```powershell
 cd C:\Users\PCP\Downloads\medflow-ai\medflow-ui\Medflow-UI-Repo\medflow-ai
 npm install
-npm run dev
+npx vite --host 127.0.0.1 --port 5173
 ```
 
 Open <http://localhost:5173> and sign in with `admin@medflow.local` / `Admin@12345`.

@@ -69,8 +69,9 @@ class PatientController {
   @GetMapping("/{patientId}")
   @Operation(summary = "Get patient", description = "Returns a patient by identifier.")
   ApiResponse<PatientResponse> find(@PathVariable Long patientId) {
-    return ApiResponse.success("Patient retrieved successfully",
-        service.findById(tenantContext.hospitalId(), patientId));
+    var patient = service.findById(tenantContext.hospitalId(), patientId);
+    auditService.record("PATIENT_VIEWED", "patient", patientId, null);
+    return ApiResponse.success("Patient retrieved successfully", patient);
   }
 
   @PutMapping("/{patientId}")
