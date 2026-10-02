@@ -36,6 +36,39 @@ public class PatientRegistrationProfileValidator {
         request.guardianRelationship(), request.guardianMobile());
   }
 
+  public void validateUpdate(Long hospitalId, com.medflow.modules.patients.domain.entity.Patient existingPatient, UpdatePatientRequest request) {
+    String firstName = request.firstName() != null ? request.firstName() : existingPatient.getFirstName();
+    java.time.LocalDate dateOfBirth = request.dateOfBirth() != null ? request.dateOfBirth() : existingPatient.getDateOfBirth();
+    com.medflow.shared.domain.Gender gender = request.gender() != null ? request.gender() : existingPatient.getGender();
+    String phone = request.phone() != null ? request.phone() : existingPatient.getPhone();
+    String email = request.email() != null ? request.email() : existingPatient.getEmail();
+    String address = request.address() != null ? request.address() : existingPatient.getAddress();
+    String bloodGroup = request.bloodGroup() != null ? request.bloodGroup() : existingPatient.getBloodGroup();
+    String emergencyContactName = request.emergencyContactName() != null ? request.emergencyContactName() : existingPatient.getEmergencyContactName();
+    String emergencyContactPhone = request.emergencyContactPhone() != null ? request.emergencyContactPhone() : existingPatient.getEmergencyContactPhone();
+    String city = request.city() != null ? request.city() : existingPatient.getCity();
+    String state = request.state() != null ? request.state() : existingPatient.getState();
+    String postalCode = request.postalCode() != null ? request.postalCode() : existingPatient.getPostalCode();
+    String preferredLanguage = request.preferredLanguage() != null ? request.preferredLanguage() : existingPatient.getPreferredLanguage();
+    String emergencyContactRelationship = request.emergencyContactRelationship() != null ? request.emergencyContactRelationship() : existingPatient.getEmergencyContactRelationship();
+    String insuranceProvider = request.insuranceProvider() != null ? request.insuranceProvider() : existingPatient.getInsuranceProvider();
+    String memberId = request.memberId() != null ? request.memberId() : existingPatient.getMemberId();
+    String governmentIdType = request.governmentIdType() != null ? request.governmentIdType() : existingPatient.getGovernmentIdType();
+    String governmentIdNumber = request.governmentIdNumber() != null ? request.governmentIdNumber() : existingPatient.getGovernmentIdNumber();
+    String allergies = request.allergies() != null ? request.allergies() : existingPatient.getAllergies();
+    String consentStatus = request.consentStatus() != null ? request.consentStatus() : existingPatient.getConsentStatus();
+    String referringPhysician = request.referringPhysician() != null ? request.referringPhysician() : existingPatient.getReferringPhysician();
+    String guardianName = request.guardianName() != null ? request.guardianName() : existingPatient.getGuardianName();
+    String guardianRelationship = request.guardianRelationship() != null ? request.guardianRelationship() : existingPatient.getGuardianRelationship();
+    String guardianMobile = request.guardianMobile() != null ? request.guardianMobile() : existingPatient.getGuardianMobile();
+
+    validate(hospitalId, firstName, dateOfBirth, gender, phone, email, address, bloodGroup,
+        emergencyContactName, emergencyContactPhone, city, state, postalCode, preferredLanguage,
+        emergencyContactRelationship, insuranceProvider, memberId, governmentIdType,
+        governmentIdNumber, allergies, consentStatus, referringPhysician, guardianName,
+        guardianRelationship, guardianMobile);
+  }
+
   private void validate(Long hospitalId, String firstName, java.time.LocalDate dateOfBirth,
       com.medflow.shared.domain.Gender gender, String phone, String email, String address,
       String bloodGroup, String emergencyContactName, String emergencyContactPhone, String city,

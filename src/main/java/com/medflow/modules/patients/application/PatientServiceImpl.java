@@ -88,12 +88,17 @@ class PatientServiceImpl implements PatientService {
   @Override
   @Transactional
   public PatientResponse update(Long hospitalId, Long patientId, UpdatePatientRequest request) {
-    profileValidator.validateUpdate(hospitalId, request);
-    if (request.email() != null && repository.existsByHospitalIdAndEmailIgnoreCaseAndIdNot(
-        hospitalId, request.email(), patientId)) {
+    var patient = load(hospitalId, patientId);
+    if (request.lastUpdatedAt() != null && patient.getUpdatedAt() != null
+        && patient.getUpdatedAt().isAfter(request.lastUpdatedAt())) {
+      throw new com.medflow.shared.exception.OptimisticLockException(
+          "Patient record was modified by another user or session. Please refresh the page before saving.");
+    }
+    profileValidator.validateUpdate(hospitalId, patient, request);
+    if (request.email() != null && !request.email().isBlank()
+        && repository.existsByHospitalIdAndEmailIgnoreCaseAndIdNot(hospitalId, request.email(), patientId)) {
       throw new DuplicateResourceException("A patient with this email already exists");
     }
-    var patient = load(hospitalId, patientId);
     patient.update(request);
     return toResponse(patient);
   }

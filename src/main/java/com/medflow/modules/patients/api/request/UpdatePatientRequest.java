@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
 public record UpdatePatientRequest(
-    @NotBlank @Size(max = 100) String firstName,
+    @Size(max = 100) String firstName,
     @Size(max = 100) String lastName,
     Gender gender,
     @Past LocalDate dateOfBirth,
@@ -22,7 +22,7 @@ public record UpdatePatientRequest(
     @Size(max = 1000) String address,
     @Size(max = 100) String emergencyContactName,
     @Size(max = 20) String emergencyContactPhone,
-    @NotNull AccountStatus status,
+    AccountStatus status,
     @Size(max = 100) String city,
     @Size(max = 100) String state,
     @Pattern(regexp = "[1-9][0-9]{5}", message = "must be a valid 6-digit Indian PIN code")
@@ -38,5 +38,22 @@ public record UpdatePatientRequest(
     @Size(max = 150) String referringPhysician,
     @Size(max = 100) String guardianName,
     @Size(max = 50) String guardianRelationship,
-    @Size(max = 20) String guardianMobile) {
+    @Size(max = 20) String guardianMobile,
+    java.time.Instant lastUpdatedAt) {
+
+  public UpdatePatientRequest(
+      String firstName, String lastName, Gender gender, LocalDate dateOfBirth,
+      String bloodGroup, String phone, String email, String address,
+      String emergencyContactName, String emergencyContactPhone, AccountStatus status,
+      String city, String state, String postalCode, String preferredLanguage,
+      String emergencyContactRelationship, String insuranceProvider, String memberId,
+      String governmentIdType, String governmentIdNumber, String allergies,
+      String consentStatus, String referringPhysician, String guardianName,
+      String guardianRelationship, String guardianMobile) {
+    this(firstName, lastName, gender, dateOfBirth, bloodGroup, phone, email, address,
+        emergencyContactName, emergencyContactPhone, status, city, state, postalCode,
+        preferredLanguage, emergencyContactRelationship, insuranceProvider, memberId,
+        governmentIdType, governmentIdNumber, allergies, consentStatus, referringPhysician,
+        guardianName, guardianRelationship, guardianMobile, null);
+  }
 }

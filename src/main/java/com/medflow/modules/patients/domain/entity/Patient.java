@@ -134,32 +134,87 @@ public class Patient {
   }
 
   public void update(UpdatePatientRequest request) {
-    this.firstName = request.firstName();
-    this.lastName = request.lastName();
-    this.gender = request.gender();
-    this.dateOfBirth = request.dateOfBirth();
-    this.bloodGroup = request.bloodGroup();
-    this.phone = request.phone();
-    this.email = request.email();
-    this.address = request.address();
-    this.emergencyContactName = request.emergencyContactName();
-    this.emergencyContactPhone = request.emergencyContactPhone();
-    this.city = request.city();
-    this.state = request.state();
-    this.postalCode = request.postalCode();
-    this.preferredLanguage = request.preferredLanguage();
-    this.emergencyContactRelationship = request.emergencyContactRelationship();
-    this.insuranceProvider = request.insuranceProvider();
-    this.memberId = request.memberId();
-    this.governmentIdType = request.governmentIdType();
-    this.governmentIdNumber = request.governmentIdNumber();
-    this.allergies = request.allergies();
-    this.consentStatus = request.consentStatus();
-    this.referringPhysician = request.referringPhysician();
-    this.guardianName = request.guardianName();
-    this.guardianRelationship = request.guardianRelationship();
-    this.guardianMobile = request.guardianMobile();
-    this.status = request.status();
+    if (request.firstName() != null) {
+      if (request.firstName().isBlank()) {
+        throw new com.medflow.shared.exception.BusinessRuleViolationException("First name cannot be blank");
+      }
+      this.firstName = request.firstName().trim();
+    }
+    if (request.lastName() != null) {
+      this.lastName = request.lastName().trim().isEmpty() ? null : request.lastName().trim();
+    }
+    if (request.gender() != null) {
+      this.gender = request.gender();
+    }
+    if (request.dateOfBirth() != null) {
+      this.dateOfBirth = request.dateOfBirth();
+    }
+    if (request.bloodGroup() != null) {
+      this.bloodGroup = request.bloodGroup().trim().isEmpty() ? null : request.bloodGroup().trim();
+    }
+    if (request.phone() != null) {
+      this.phone = request.phone().trim().isEmpty() ? null : request.phone().trim();
+    }
+    if (request.email() != null) {
+      this.email = request.email().trim().isEmpty() ? null : request.email().trim();
+    }
+    if (request.address() != null) {
+      this.address = request.address().trim().isEmpty() ? null : request.address().trim();
+    }
+    if (request.emergencyContactName() != null) {
+      this.emergencyContactName = request.emergencyContactName().trim().isEmpty() ? null : request.emergencyContactName().trim();
+    }
+    if (request.emergencyContactPhone() != null) {
+      this.emergencyContactPhone = request.emergencyContactPhone().trim().isEmpty() ? null : request.emergencyContactPhone().trim();
+    }
+    if (request.city() != null) {
+      this.city = request.city().trim().isEmpty() ? null : request.city().trim();
+    }
+    if (request.state() != null) {
+      this.state = request.state().trim().isEmpty() ? null : request.state().trim();
+    }
+    if (request.postalCode() != null) {
+      this.postalCode = request.postalCode().trim().isEmpty() ? null : request.postalCode().trim();
+    }
+    if (request.preferredLanguage() != null) {
+      this.preferredLanguage = request.preferredLanguage().trim().isEmpty() ? null : request.preferredLanguage().trim();
+    }
+    if (request.emergencyContactRelationship() != null) {
+      this.emergencyContactRelationship = request.emergencyContactRelationship().trim().isEmpty() ? null : request.emergencyContactRelationship().trim();
+    }
+    if (request.insuranceProvider() != null) {
+      this.insuranceProvider = request.insuranceProvider().trim().isEmpty() ? null : request.insuranceProvider().trim();
+    }
+    if (request.memberId() != null) {
+      this.memberId = request.memberId().trim().isEmpty() ? null : request.memberId().trim();
+    }
+    if (request.governmentIdType() != null) {
+      this.governmentIdType = request.governmentIdType().trim().isEmpty() ? null : request.governmentIdType().trim();
+    }
+    if (request.governmentIdNumber() != null) {
+      this.governmentIdNumber = request.governmentIdNumber().trim().isEmpty() ? null : request.governmentIdNumber().trim();
+    }
+    if (request.allergies() != null) {
+      this.allergies = request.allergies().trim().isEmpty() ? null : request.allergies().trim();
+    }
+    if (request.consentStatus() != null) {
+      this.consentStatus = request.consentStatus().trim().isEmpty() ? null : request.consentStatus().trim();
+    }
+    if (request.referringPhysician() != null) {
+      this.referringPhysician = request.referringPhysician().trim().isEmpty() ? null : request.referringPhysician().trim();
+    }
+    if (request.guardianName() != null) {
+      this.guardianName = request.guardianName().trim().isEmpty() ? null : request.guardianName().trim();
+    }
+    if (request.guardianRelationship() != null) {
+      this.guardianRelationship = request.guardianRelationship().trim().isEmpty() ? null : request.guardianRelationship().trim();
+    }
+    if (request.guardianMobile() != null) {
+      this.guardianMobile = request.guardianMobile().trim().isEmpty() ? null : request.guardianMobile().trim();
+    }
+    if (request.status() != null) {
+      this.status = request.status();
+    }
     this.updatedAt = Instant.now();
   }
 

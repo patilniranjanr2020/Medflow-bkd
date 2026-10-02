@@ -144,6 +144,128 @@ class PatientProfileAccessTest {
     assertThat(crossReports.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
   }
 
+  @Test
+  @DisplayName("Partial update succeeds, preserves untouched fields, updates timestamp, and records audit")
+  void partialUpdatePreservesUntouchedFieldsAndUpdatesTimestampAndAudit() {
+    var token = registerWorkspace("update_test@hospital.local", "Hospital Update Test");
+    var patientId = createPatient(token, "Priya", "Nair", "1992-08-25", "FEMALE", "priya@test.local", "B+");
+
+    // Get current profile
+    var initialResponse = rest.exchange(
+        "/api/v1/patients/" + patientId,
+        HttpMethod.GET,
+        authorized(token, null),
+        String.class);
+    assertThat(initialResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+    String initialUpdatedAt = JsonPath.read(initialResponse.getBody(), "$.data.updatedAt");
+    String patientCode = JsonPath.read(initialResponse.getBody(), "$.data.patientCode");
+
+    // Perform partial update changing only phone and bloodGroup
+    var updatePayload = Map.of(
+        "phone", "+91 99999 88888",
+        "bloodGroup", "AB+",
+        "lastUpdatedAt", initialUpdatedAt);
+
+    var updateResponse = rest.exchange(
+        "/api/v1/patients/" + patientId,
+        HttpMethod.PUT,
+        authorized(token, updatePayload),
+        String.class);
+
+    assertThat(updateResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+    assertThat(JsonPath.<String>read(updateResponse.getBody(), "$.data.phone")).isEqualTo("+91 99999 88888");
+    assertThat(JsonPath.<String>read(updateResponse.getBody(), "$.data.bloodGroup")).isEqualTo("AB+");
+    // Verify untouched fields were preserved
+    assertThat(JsonPath.<String>read(updateResponse.getBody(), "$.data.firstName")).isEqualTo("Priya");
+    assertThat(JsonPath.<String>read(updateResponse.getBody(), "$.data.lastName")).isEqualTo("Nair");
+    assertThat(JsonPath.<String>read(updateResponse.getBody(), "$.data.gender")).isEqualTo("FEMALE");
+    assertThat(JsonPath.<String>read(updateResponse.getBody(), "$.data.dateOfBirth")).isEqualTo("1992-08-25");
+    assertThat(JsonPath.<String>read(updateResponse.getBody(), "$.data.email")).isEqualTo("priya@test.local");
+    // Verify server-managed patient code was preserved
+    assertThat(JsonPath.<String>read(updateResponse.getBody(), "$.data.patientCode")).isEqualTo(patientCode);
+    // Verify updatedAt was refreshed
+    String newUpdatedAt = JsonPath.read(updateResponse.getBody(), "$.data.updatedAt");
+    assertThat(newUpdatedAt).isNotNull();
+
+    // Verify audit log has PATIENT_UPDATED
+    var auditResponse = rest.exchange(
+        "/api/v1/audit-logs?entityType=patient",
+        HttpMethod.GET,
+        authorized(token, null),
+        String.class);
+    assertThat(auditResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+    List<String> actions = JsonPath.read(auditResponse.getBody(), "$.data.content[*].action");
+    assertThat(actions).contains("PATIENT_UPDATED");
+  }
+
+  @Test
+  @DisplayName("Optimistic locking rejects update with 409 Conflict when lastUpdatedAt is stale")
+  void optimisticLockingRejectsStaleUpdate() {
+    var token = registerWorkspace("concurrency@hospital.local", "Hospital Concurrency Test");
+    var patientId = createPatient(token, "Rahul", "Dravid", "1973-01-11", "MALE", "rahul@test.local", "O+");
+
+    // First update moves the timestamp forward
+    var firstUpdate = rest.exchange(
+        "/api/v1/patients/" + patientId,
+        HttpMethod.PUT,
+        authorized(token, Map.of("phone", "+91 91111 22222")),
+        String.class);
+    assertThat(firstUpdate.getStatusCode()).isEqualTo(HttpStatus.OK);
+
+    // Stale update using an old timestamp
+    var stalePayload = Map.of(
+        "phone", "+91 93333 44444",
+        "lastUpdatedAt", "2020-01-01T00:00:00Z");
+
+    var conflictResponse = rest.exchange(
+        "/api/v1/patients/" + patientId,
+        HttpMethod.PUT,
+        authorized(token, stalePayload),
+        String.class);
+
+    assertThat(conflictResponse.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+  }
+
+  @Test
+  @DisplayName("Validation fails when updating with invalid blood group or future date of birth")
+  void invalidDemographicFieldsAreRejected() {
+    var token = registerWorkspace("validation@hospital.local", "Hospital Validation Test");
+    var patientId = createPatient(token, "Anita", "Desai", "1985-03-15", "FEMALE", "anita@test.local", "A+");
+
+    // Invalid blood group
+    var badBloodResponse = rest.exchange(
+        "/api/v1/patients/" + patientId,
+        HttpMethod.PUT,
+        authorized(token, Map.of("bloodGroup", "XYZ")),
+        String.class);
+    assertThat(badBloodResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+
+    // Future date of birth
+    var futureDobResponse = rest.exchange(
+        "/api/v1/patients/" + patientId,
+        HttpMethod.PUT,
+        authorized(token, Map.of("dateOfBirth", "2099-01-01")),
+        String.class);
+    assertThat(futureDobResponse.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+  }
+
+  @Test
+  @DisplayName("Tenant isolation: Workspace B cannot update Workspace A's patient")
+  void tenantIsolationPreventsCrossHospitalUpdate() {
+    var tokenA = registerWorkspace("tenant_a@hospital.local", "Hospital Tenant A");
+    var patientIdA = createPatient(tokenA, "Vikram", "Seth", "1952-06-20", "MALE", "vikram@test.local", "B-");
+
+    var tokenB = registerWorkspace("tenant_b@hospital.local", "Hospital Tenant B");
+
+    var crossUpdateResponse = rest.exchange(
+        "/api/v1/patients/" + patientIdA,
+        HttpMethod.PUT,
+        authorized(tokenB, Map.of("phone", "+91 97777 66666")),
+        String.class);
+
+    assertThat(crossUpdateResponse.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+  }
+
   private String registerWorkspace(String email, String hospitalName) {
     var response = rest.postForEntity("/api/v1/auth/register", json(Map.of(
         "fullName", "Admin User",
@@ -167,7 +289,7 @@ class PatientProfileAccessTest {
     return JsonPath.read(response.getBody(), "$.data.id");
   }
 
-  private HttpEntity<Map<String, Object>> authorized(String token, Map<String, Object> body) {
+  private HttpEntity<Object> authorized(String token, Object body) {
     var headers = new HttpHeaders();
     headers.setBearerAuth(token);
     if (body != null) {

@@ -53,6 +53,11 @@ class GlobalExceptionHandler {
     return response(HttpStatus.CONFLICT, exception.getMessage(), List.of());
   }
 
+  @ExceptionHandler(com.medflow.shared.exception.OptimisticLockException.class)
+  ResponseEntity<ApiResponse<Void>> optimisticLock(com.medflow.shared.exception.OptimisticLockException exception) {
+    return response(HttpStatus.CONFLICT, exception.getMessage(), List.of());
+  }
+
   @ExceptionHandler(BusinessRuleViolationException.class)
   ResponseEntity<ApiResponse<Void>> businessRule(BusinessRuleViolationException exception) {
     return response(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage(), List.of());
