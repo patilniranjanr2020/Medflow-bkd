@@ -20,6 +20,7 @@ import com.medflow.modules.patients.api.PatientSummary;
 import com.medflow.shared.api.PageResponse;
 import com.medflow.shared.exception.ResourceNotFoundException;
 import com.medflow.shared.exception.BusinessRuleViolationException;
+import com.medflow.shared.domain.AccountStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -217,11 +218,19 @@ class AppointmentServiceImpl implements AppointmentService {
   }
 
   private PatientSummary requirePatient(Long hospitalId, Long patientId) {
+    var patient = patientService.findById(hospitalId, patientId);
+    if (patient.status() != AccountStatus.ACTIVE) {
+      throw new BusinessRuleViolationException("The selected patient is not eligible for appointments");
+    }
     return patientService.summariesByIds(hospitalId, List.of(patientId)).stream().findFirst()
         .orElseThrow(() -> new ResourceNotFoundException("Patient not found: " + patientId));
   }
 
   private DoctorSummary requireDoctor(Long hospitalId, Long doctorId) {
+    var doctor = doctorService.findById(hospitalId, doctorId);
+    if (doctor.status() != AccountStatus.ACTIVE) {
+      throw new BusinessRuleViolationException("The selected doctor is not eligible for appointments");
+    }
     return doctorService.summariesByIds(hospitalId, List.of(doctorId)).stream().findFirst()
         .orElseThrow(() -> new ResourceNotFoundException("Doctor not found: " + doctorId));
   }
