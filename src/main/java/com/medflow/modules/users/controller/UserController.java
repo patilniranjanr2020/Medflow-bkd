@@ -70,6 +70,7 @@ class UserController {
   }
 
   @PutMapping("/{userId}")
+  @PreAuthorize("hasRole('ADMIN')")
   @Operation(summary = "Update profile", description = "Updates a staff member's personal details.")
   ApiResponse<UserAccountResponse> updateProfile(@PathVariable Long userId,
       @Valid @RequestBody UpdateUserProfileRequest request) {
