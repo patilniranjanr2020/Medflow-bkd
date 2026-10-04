@@ -15,8 +15,17 @@ public interface MedicationService {
 
   MedicationResponse update(Long hospitalId, Long medicationId, UpdateMedicationRequest request);
 
-  PageResponse<MedicationResponse> search(Long hospitalId, String query, boolean lowStockOnly,
-      int page, int size);
+  PageResponse<MedicationResponse> search(Long hospitalId, String query, String category,
+      String stockStatus, boolean lowStockOnly, int page, int size);
+
+  default PageResponse<MedicationResponse> search(Long hospitalId, String query,
+      boolean lowStockOnly, int page, int size) {
+    return search(hospitalId, query, null, null, lowStockOnly, page, size);
+  }
+
+  java.util.List<String> categories(Long hospitalId);
+
+  void delete(Long hospitalId, Long medicationId);
 
   /** Positive delta restocks, negative delta dispenses; stock can never go below zero. */
   MedicationResponse adjustStock(Long hospitalId, Long medicationId, AdjustStockRequest request);

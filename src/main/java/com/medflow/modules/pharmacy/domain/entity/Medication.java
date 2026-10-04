@@ -46,6 +46,9 @@ public class Medication {
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
 
+  @Column(name = "is_deleted", nullable = false)
+  private boolean deleted;
+
   protected Medication() {
   }
 
@@ -58,6 +61,7 @@ public class Medication {
     this.stockQuantity = stockQuantity;
     this.reorderLevel = reorderLevel;
     this.expiryDate = expiryDate;
+    this.deleted = false;
     this.createdAt = Instant.now();
     this.updatedAt = this.createdAt;
   }
@@ -103,4 +107,11 @@ public class Medication {
   public LocalDate getExpiryDate() { return expiryDate; }
   public Instant getCreatedAt() { return createdAt; }
   public Instant getUpdatedAt() { return updatedAt; }
+
+  public void markDeleted() {
+    this.deleted = true;
+    touch();
+  }
+
+  public boolean isDeleted() { return deleted; }
 }

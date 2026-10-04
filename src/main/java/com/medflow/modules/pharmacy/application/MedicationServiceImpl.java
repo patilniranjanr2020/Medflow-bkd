@@ -34,7 +34,7 @@ class MedicationServiceImpl implements MedicationService {
   @Override
   @Transactional
   public MedicationResponse create(Long hospitalId, CreateMedicationRequest request) {
-    if (repository.existsByHospitalIdAndNameIgnoreCase(hospitalId, request.name())) {
+    if (repository.existsByHospitalIdAndNameIgnoreCaseAndDeletedFalse(hospitalId, request.name())) {
       throw new DuplicateResourceException("A medication with this name already exists");
     }
     var medication = repository.save(new Medication(hospitalId, request.name(), request.category(),
@@ -53,7 +53,7 @@ class MedicationServiceImpl implements MedicationService {
   @Transactional
   public MedicationResponse update(Long hospitalId, Long medicationId,
       UpdateMedicationRequest request) {
-    if (repository.existsByHospitalIdAndNameIgnoreCaseAndIdNot(hospitalId, request.name(),
+    if (repository.existsByHospitalIdAndNameIgnoreCaseAndIdNotAndDeletedFalse(hospitalId, request.name(),
         medicationId)) {
       throw new DuplicateResourceException("A medication with this name already exists");
     }
@@ -65,13 +65,29 @@ class MedicationServiceImpl implements MedicationService {
 
   @Override
   @Transactional(readOnly = true)
-  public PageResponse<MedicationResponse> search(Long hospitalId, String query,
-      boolean lowStockOnly, int page, int size) {
+  public PageResponse<MedicationResponse> search(Long hospitalId, String query, String category,
+      String stockStatus, boolean lowStockOnly, int page, int size) {
     var pageable = PageRequest.of(Math.max(page, 0), Math.clamp(size, 1, MAX_PAGE_SIZE),
         Sort.by(Sort.Direction.ASC, "name"));
-    var normalized = (query == null || query.isBlank()) ? null : query.trim();
+    var normalizedQuery = (query == null || query.isBlank()) ? null : query.trim();
+    var normalizedCategory = (category == null || category.isBlank() || "ALL".equalsIgnoreCase(category)) ? null : category.trim();
+    var normalizedStockStatus = (stockStatus == null || stockStatus.isBlank()) ? null : stockStatus.trim().toUpperCase();
     return PageResponse.from(
-        repository.search(hospitalId, normalized, lowStockOnly, pageable).map(this::toResponse));
+        repository.search(hospitalId, normalizedQuery, normalizedCategory, normalizedStockStatus, lowStockOnly, pageable)
+            .map(this::toResponse));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public java.util.List<String> categories(Long hospitalId) {
+    return repository.findDistinctCategories(hospitalId);
+  }
+
+  @Override
+  @Transactional
+  public void delete(Long hospitalId, Long medicationId) {
+    var medication = load(hospitalId, medicationId);
+    medication.markDeleted();
   }
 
   @Override
@@ -87,7 +103,7 @@ class MedicationServiceImpl implements MedicationService {
   }
 
   private Medication load(Long hospitalId, Long medicationId) {
-    return repository.findByIdAndHospitalId(medicationId, hospitalId)
+    return repository.findByIdAndHospitalIdAndDeletedFalse(medicationId, hospitalId)
         .orElseThrow(() -> new ResourceNotFoundException("Medication not found: " + medicationId));
   }
 

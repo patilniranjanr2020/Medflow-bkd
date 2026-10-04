@@ -11,5 +11,9 @@ public interface LabOrderRepository
 
   Optional<LabOrder> findByIdAndHospitalId(Long id, Long hospitalId);
 
+  Optional<LabOrder> findByIdAndHospitalIdAndDeletedFalse(Long id, Long hospitalId);
+
   long countByHospitalIdAndStatus(Long hospitalId, LabOrderStatus status);
+
+  long countByHospitalIdAndStatusAndDeletedFalse(Long hospitalId, LabOrderStatus status);
 }

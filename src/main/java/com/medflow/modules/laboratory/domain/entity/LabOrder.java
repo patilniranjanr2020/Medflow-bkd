@@ -53,6 +53,9 @@ public class LabOrder {
   @Column(name = "updated_at", nullable = false)
   private Instant updatedAt;
 
+  @Column(name = "is_deleted", nullable = false)
+  private boolean deleted;
+
   protected LabOrder() {
   }
 
@@ -64,6 +67,7 @@ public class LabOrder {
     this.testName = testName;
     this.priority = priority;
     this.status = LabOrderStatus.ORDERED;
+    this.deleted = false;
     this.orderedAt = Instant.now();
     this.updatedAt = this.orderedAt;
   }
@@ -94,6 +98,38 @@ public class LabOrder {
     touch();
   }
 
+  public void updateDetails(String testName, LabPriority priority, Long doctorId) {
+    if (status == LabOrderStatus.CANCELLED) {
+      throw new BusinessRuleViolationException("A cancelled lab order cannot be modified");
+    }
+    if (testName != null && !testName.isBlank()) {
+      this.testName = testName.trim();
+    }
+    if (priority != null) {
+      this.priority = priority;
+    }
+    if (doctorId != null) {
+      this.doctorId = doctorId;
+    }
+    touch();
+  }
+
+  public void updateResult(String resultSummary) {
+    if (status == LabOrderStatus.CANCELLED) {
+      throw new BusinessRuleViolationException("A cancelled lab order cannot have its result updated");
+    }
+    if (status == LabOrderStatus.ORDERED) {
+      this.status = LabOrderStatus.IN_PROGRESS;
+    }
+    this.resultSummary = resultSummary;
+    touch();
+  }
+
+  public void markDeleted() {
+    this.deleted = true;
+    touch();
+  }
+
   private void requireStatus(LabOrderStatus expected, String message) {
     if (status != expected) {
       throw new BusinessRuleViolationException(message);
@@ -115,4 +151,5 @@ public class LabOrder {
   public Instant getOrderedAt() { return orderedAt; }
   public Instant getCompletedAt() { return completedAt; }
   public Instant getUpdatedAt() { return updatedAt; }
+  public boolean isDeleted() { return deleted; }
 }

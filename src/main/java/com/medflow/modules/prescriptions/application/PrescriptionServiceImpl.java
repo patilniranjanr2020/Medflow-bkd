@@ -10,6 +10,7 @@ import com.medflow.modules.patients.api.PatientSummary;
 import com.medflow.modules.prescriptions.api.PrescriptionService;
 import com.medflow.modules.prescriptions.api.PrescriptionStatus;
 import com.medflow.modules.prescriptions.api.request.CreatePrescriptionRequest;
+import com.medflow.modules.prescriptions.api.request.UpdatePrescriptionRequest;
 import com.medflow.modules.prescriptions.api.response.PrescriptionItemResponse;
 import com.medflow.modules.prescriptions.api.response.PrescriptionResponse;
 import com.medflow.modules.prescriptions.domain.entity.Prescription;
@@ -83,6 +84,38 @@ class PrescriptionServiceImpl implements PrescriptionService {
         PrescriptionSpecifications.withFilters(hospitalId, patientId, doctorId, status), pageable);
     return new PageResponse<>(enrich(hospitalId, result.getContent()), result.getNumber(),
         result.getSize(), result.getTotalElements(), result.getTotalPages());
+  }
+
+  @Override
+  @Transactional
+  public PrescriptionResponse update(Long hospitalId, Long prescriptionId,
+      UpdatePrescriptionRequest request) {
+    var prescription = load(hospitalId, prescriptionId);
+    var patient = requirePatient(hospitalId, request.patientId());
+    var doctor = requireDoctor(hospitalId, request.doctorId());
+
+    var medicines = request.medicines().stream()
+        .map(item -> new PrescriptionItemResponse(item.medicationName(), item.dosage(),
+            item.frequency(), item.durationDays(), item.instructions()))
+        .toList();
+
+    prescription.update(doctor.id(), patient.id(), request.appointmentId(),
+        request.diagnosis(), writeMedicines(medicines), request.digitallySigned());
+
+    return toResponse(prescription, patient.fullName(), doctor.fullName());
+  }
+
+  @Override
+  @Transactional
+  public void delete(Long hospitalId, Long prescriptionId) {
+    var prescription = load(hospitalId, prescriptionId);
+    if (prescription.isDigitallySigned()) {
+      throw new BusinessRuleViolationException("A digitally signed prescription cannot be deleted");
+    }
+    if (prescription.getStatus() != PrescriptionStatus.ACTIVE) {
+      throw new BusinessRuleViolationException("Only active draft prescriptions can be deleted");
+    }
+    repository.delete(prescription);
   }
 
   @Override

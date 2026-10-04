@@ -5,6 +5,7 @@ import com.medflow.modules.appointments.api.AppointmentMode;
 import com.medflow.modules.appointments.api.AppointmentScheduleConflictEvent;
 import com.medflow.modules.appointments.api.AppointmentService;
 import com.medflow.modules.appointments.api.AppointmentStatus;
+import com.medflow.modules.audit.api.AuditService;
 import com.medflow.modules.appointments.api.DailyAppointmentCount;
 import com.medflow.modules.appointments.api.request.BookAppointmentRequest;
 import com.medflow.modules.appointments.api.request.RescheduleAppointmentRequest;
@@ -18,6 +19,7 @@ import com.medflow.modules.patients.api.PatientService;
 import com.medflow.modules.patients.api.PatientSummary;
 import com.medflow.shared.api.PageResponse;
 import com.medflow.shared.exception.ResourceNotFoundException;
+import com.medflow.shared.exception.BusinessRuleViolationException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -32,6 +34,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Isolation;
 
 @Service
 class AppointmentServiceImpl implements AppointmentService {
@@ -43,17 +46,19 @@ class AppointmentServiceImpl implements AppointmentService {
   private final PatientService patientService;
   private final DoctorService doctorService;
   private final ApplicationEventPublisher eventPublisher;
+  private final AuditService auditService;
 
   AppointmentServiceImpl(AppointmentRepository repository, PatientService patientService,
-      DoctorService doctorService, ApplicationEventPublisher eventPublisher) {
+      DoctorService doctorService, ApplicationEventPublisher eventPublisher, AuditService auditService) {
     this.repository = repository;
     this.patientService = patientService;
     this.doctorService = doctorService;
     this.eventPublisher = eventPublisher;
+    this.auditService = auditService;
   }
 
   @Override
-  @Transactional
+  @Transactional(isolation = Isolation.SERIALIZABLE)
   public AppointmentResponse book(Long hospitalId, Long bookedByUserId,
       BookAppointmentRequest request) {
     var patient = requirePatient(hospitalId, request.patientId());
@@ -63,18 +68,20 @@ class AppointmentServiceImpl implements AppointmentService {
         : DEFAULT_DURATION_MINUTES;
     var mode = request.appointmentMode() != null ? request.appointmentMode() : AppointmentMode.ONLINE;
 
-    var appointment = repository.save(new Appointment(hospitalId, doctor.id(), patient.id(), mode,
+    var candidate = new Appointment(hospitalId, doctor.id(), patient.id(), mode,
         request.scheduledAt(), duration, nextQueueNumber(doctor.id(), request.scheduledAt()),
-        bookedByUserId, request.reason(), doctor.consultationFee(), request.notes()));
+        bookedByUserId, request.reason(), doctor.consultationFee(), request.notes());
 
-    // Conflicts are surfaced, not blocked: the front desk decides, not the system.
-    if (hasConflict(appointment)) {
+    if (hasConflict(candidate)) {
       eventPublisher.publishEvent(new AppointmentScheduleConflictEvent(hospitalId, doctor.id(),
-          doctor.fullName(), appointment.getScheduledAt()));
+          doctor.fullName(), candidate.getScheduledAt()));
+      throw new BusinessRuleViolationException("The doctor already has an appointment in this time slot");
     }
+    var appointment = repository.save(candidate);
     eventPublisher.publishEvent(new AppointmentBookedEvent(hospitalId, appointment.getId(),
         patient.id(), patient.fullName(), doctor.id(), doctor.fullName(),
         appointment.getScheduledAt()));
+    auditService.record("BOOK", "APPOINTMENT", appointment.getId(), "{\"status\":\"booked\"}");
 
     return toResponse(appointment, patient.fullName(), doctor);
   }
@@ -104,6 +111,9 @@ class AppointmentServiceImpl implements AppointmentService {
       AppointmentStatus target) {
     var appointment = load(hospitalId, appointmentId);
     appointment.transitionTo(target);
+    if (target == AppointmentStatus.CANCELLED) {
+      auditService.record("CANCEL", "APPOINTMENT", appointment.getId(), "{\"status\":\"cancelled\"}");
+    }
     return enrich(hospitalId, List.of(appointment)).getFirst();
   }
 
@@ -117,6 +127,7 @@ class AppointmentServiceImpl implements AppointmentService {
       var doctor = requireDoctor(hospitalId, appointment.getDoctorId());
       eventPublisher.publishEvent(new AppointmentScheduleConflictEvent(hospitalId, doctor.id(),
           doctor.fullName(), appointment.getScheduledAt()));
+      throw new BusinessRuleViolationException("The doctor already has an appointment in this time slot");
     }
     return enrich(hospitalId, List.of(appointment)).getFirst();
   }

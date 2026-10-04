@@ -70,6 +70,24 @@ public class Prescription {
     this.signedAt = digitallySigned ? this.createdAt : null;
   }
 
+  public void update(Long doctorId, Long patientId, Long appointmentId, String diagnosis,
+      String medicinesJson, Boolean digitallySigned) {
+    if (this.digitallySigned) {
+      throw new BusinessRuleViolationException("A digitally signed prescription cannot be modified");
+    }
+    requireActive("Only active prescriptions can be modified");
+    this.doctorId = doctorId;
+    this.patientId = patientId;
+    this.appointmentId = appointmentId;
+    this.diagnosis = diagnosis;
+    this.medicinesJson = medicinesJson;
+    if (Boolean.TRUE.equals(digitallySigned)) {
+      this.digitallySigned = true;
+      this.signedAt = Instant.now();
+    }
+    touch();
+  }
+
   public void complete() {
     requireActive("Only active prescriptions can be completed");
     this.status = PrescriptionStatus.COMPLETED;
