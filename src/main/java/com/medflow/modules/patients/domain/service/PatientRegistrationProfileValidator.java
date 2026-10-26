@@ -82,25 +82,25 @@ public class PatientRegistrationProfileValidator {
     require(profile, "GENDER", gender, "Gender");
     require(profile, "MOBILE", phone, "Mobile");
     require(profile, "EMAIL", email, "Email");
-    rejectHidden(profile, "ADDRESS", address, "Address");
-    rejectHidden(profile, "BLOOD_GROUP", bloodGroup, "Blood Group");
-    rejectHidden(profile, "EMERGENCY_CONTACT_NAME", emergencyContactName, "Emergency Contact Name");
-    rejectHidden(profile, "EMERGENCY_CONTACT_MOBILE", emergencyContactPhone, "Emergency Contact Mobile");
-    rejectHidden(profile, "CITY", city, "City");
-    rejectHidden(profile, "STATE", state, "State");
-    rejectHidden(profile, "POSTAL_CODE", postalCode, "PIN code");
-    rejectHidden(profile, "PREFERRED_LANGUAGE", preferredLanguage, "Preferred Language");
-    rejectHidden(profile, "EMERGENCY_CONTACT_RELATIONSHIP", emergencyContactRelationship, "Emergency Contact Relationship");
-    rejectHidden(profile, "INSURANCE_PROVIDER", insuranceProvider, "Insurance Provider");
-    rejectHidden(profile, "MEMBER_ID", memberId, "Member ID");
-    rejectHidden(profile, "GOVERNMENT_ID_TYPE", governmentIdType, "Government ID Type");
-    rejectHidden(profile, "GOVERNMENT_ID_NUMBER", governmentIdNumber, "Government ID Number");
-    rejectHidden(profile, "ALLERGIES", allergies, "Allergies");
-    rejectHidden(profile, "CONSENT_STATUS", consentStatus, "Consent Status");
-    rejectHidden(profile, "REFERRING_PHYSICIAN", referringPhysician, "Referring Physician");
-    rejectHidden(profile, "GUARDIAN_NAME", guardianName, "Guardian Name");
-    rejectHidden(profile, "GUARDIAN_RELATIONSHIP", guardianRelationship, "Guardian Relationship");
-    rejectHidden(profile, "GUARDIAN_MOBILE", guardianMobile, "Guardian Mobile");
+    require(profile, "ADDRESS", address, "Address");
+    require(profile, "BLOOD_GROUP", bloodGroup, "Blood Group");
+    require(profile, "EMERGENCY_CONTACT_NAME", emergencyContactName, "Emergency Contact Name");
+    require(profile, "EMERGENCY_CONTACT_MOBILE", emergencyContactPhone, "Emergency Contact Mobile");
+    require(profile, "CITY", city, "City");
+    require(profile, "STATE", state, "State");
+    require(profile, "POSTAL_CODE", postalCode, "PIN code");
+    require(profile, "PREFERRED_LANGUAGE", preferredLanguage, "Preferred Language");
+    require(profile, "EMERGENCY_CONTACT_RELATIONSHIP", emergencyContactRelationship, "Emergency Contact Relationship");
+    require(profile, "INSURANCE_PROVIDER", insuranceProvider, "Insurance Provider");
+    require(profile, "MEMBER_ID", memberId, "Member ID");
+    require(profile, "GOVERNMENT_ID_TYPE", governmentIdType, "Government ID Type");
+    require(profile, "GOVERNMENT_ID_NUMBER", governmentIdNumber, "Government ID Number");
+    require(profile, "ALLERGIES", allergies, "Allergies");
+    require(profile, "CONSENT_STATUS", consentStatus, "Consent Status");
+    require(profile, "REFERRING_PHYSICIAN", referringPhysician, "Referring Physician");
+    require(profile, "GUARDIAN_NAME", guardianName, "Guardian Name");
+    require(profile, "GUARDIAN_RELATIONSHIP", guardianRelationship, "Guardian Relationship");
+    require(profile, "GUARDIAN_MOBILE", guardianMobile, "Guardian Mobile");
   }
 
   private static void require(PatientProfileResolver.EffectiveProfile profile, String key,
